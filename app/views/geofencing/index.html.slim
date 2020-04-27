@@ -1,0 +1,371 @@
+= javascript_include_tag "https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true&libraries=places&key=AIzaSyDaMIwD-73f2_FuvWcAm0olLBYwMTkR9os&callback=initMap", defer: "defer"
+
+.centered style="text-align:center;"
+  h1 GeoFencing
+  br
+  = form_for :geofencing, url: get_position_geofencing_index_path , method: "post", html: {class: 'ui form', id: "geofencing_form"} do |f|
+    p.heading Insert Location To Get Position
+    br
+    = f.text_field :address, placeholder: "Enter your location here", required: true
+    = f.hidden_field :lat
+    = f.hidden_field :long
+    = f.hidden_field :count
+
+#map-canvas style="height: 600px;"
+
+javascript:
+  var map;
+  var infoWindow;
+  check_pick_up_lat_long();
+
+  // Define the LatLng coordinates for the outSkirt polygon.
+  var outSkirtCoords = [
+    { lat: 51.540997, lng: -0.128403 },
+    { lat: 51.549965, lng: -0.097504 },
+    { lat: 51.540997, lng: -0.073128 },
+    { lat: 51.527756, lng: -0.069695 },
+    { lat: 51.517930, lng: -0.075531 },
+    { lat: 51.510452, lng: -0.106430 },
+    { lat: 51.514512, lng: -0.131149 },
+    { lat: 51.529892, lng: -0.133553 }
+  ];
+
+  // Define the LatLng coordinates for the central polygon.
+  /*var centralCoords = [
+    {lat: 51.534164, lng: -0.122223 },
+    {lat: 51.543132, lng: -0.107460 },
+    {lat: 51.542705, lng: -0.090294 },
+    {lat: 51.534804, lng: -0.077934 },
+    {lat: 51.521775 ,lng: -0.080681 },
+    {lat: 51.516862, lng: -0.101624 },
+    {lat: 51.521134, lng: -0.121536 }
+  ];*/
+  var centralCoords1 = [
+    { lat: 32.775094, lng: -79.945450 },
+    { lat: 32.769378, lng: -79.937812 },
+    { lat: 32.768949, lng: -79.926293 },
+    { lat: 32.776940, lng: -79.923713 }
+  ];
+
+  var centralCoords2 = [
+    { lat: 32.777136, lng: -79.924098 },
+    { lat: 32.786391, lng: -79.923130 },
+    { lat: 32.7803629, lng: -79.947746 },
+    { lat: 32.775269, lng: -79.945153 }
+  ];
+
+  var centralCoords3 = [
+    {lat: 32.781607, lng: -79.941072},
+    {lat: 32.78733, lng: -79.944398},
+    {lat: 32.793137, lng: -79.929999},
+    {lat: 32.790773, lng: -79.924179}
+  ];
+
+  var centralCoords4 = [
+    {lat: 32.875478, lng: -79.967587},
+    {lat: 32.849302, lng: -80.048869},
+    {lat: 32.901317, lng: -80.105745},
+    {lat: 32.967051, lng: -80.038767}
+  ];
+
+  var centralCoords5 = [
+    {lat: 32.803231, lng: -79.905954},
+    {lat: 32.792903, lng: -79.881941},
+    {lat: 32.78305, lng: -79.896269},
+    {lat: 32.800484, lng: -79.908021}
+  ];
+
+  var centralCoords6 = [
+    {lat: 32.768584, lng: -79.867436},
+    {lat: 32.781449, lng: -79.814465},
+    {lat: 32.77076, lng: -79.810887},
+    {lat: 32.746096, lng: -79.850958}
+  ];
+
+  function initMap(lat, long) {
+    if (lat !== undefined){
+      center_point = {lat: lat, lng: long}
+    }
+    else{
+      center_point = {lat: 32.775094, lng: -79.945450}
+    };
+    map = new google.maps.Map(document.getElementById('map-canvas'), {
+      zoom: 13,
+      center: center_point
+    });
+
+    //Construct the outSkirt polygon.
+    var outSkirtTriangle = new google.maps.Polygon({
+      paths: outSkirtCoords,
+      strokeColor: 'white',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#6eacf3',
+      fillOpacity: 0.70
+    });
+
+    // Construct the central polygon.
+    var centralTriangle1 = new google.maps.Polygon({
+      paths: centralCoords1,
+      strokeColor: 'white',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#42b388',
+      fillOpacity: 0.50
+    });
+
+    var centralTriangle2 = new google.maps.Polygon({
+      paths: centralCoords2,
+      strokeColor: 'white',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#42b388',
+      fillOpacity: 0.50
+    });
+
+    var centralTriangle3 = new google.maps.Polygon({
+      paths: centralCoords3,
+      strokeColor: 'white',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#42b388',
+      fillOpacity: 0.50
+    });
+
+    var centralTriangle4 = new google.maps.Polygon({
+      paths: centralCoords4,
+      strokeColor: 'white',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#42b388',
+      fillOpacity: 0.50
+    });
+
+    var centralTriangle5 = new google.maps.Polygon({
+      paths: centralCoords5,
+      strokeColor: 'white',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#42b388',
+      fillOpacity: 0.50
+    });
+
+    var centralTriangle6 = new google.maps.Polygon({
+      paths: centralCoords6,
+      strokeColor: 'white',
+      strokeOpacity: 1,
+      strokeWeight: 2,
+      fillColor: '#42b388',
+      fillOpacity: 0.50
+    });
+
+    if (lat !== undefined){
+      pick_up = {lat: lat, lng: long}
+      var marker = new google.maps.Marker({
+        position: pick_up,
+        map: map,
+        title: 'Hello World!'
+      });
+    };
+    outSkirtTriangle.setMap(map);
+    centralTriangle1.setMap(map);
+    centralTriangle2.setMap(map);
+    centralTriangle3.setMap(map);
+    centralTriangle4.setMap(map);
+    centralTriangle5.setMap(map);
+    centralTriangle6.setMap(map);
+    infoWindow = new google.maps.InfoWindow();
+
+    var locations = [
+      ["Andrew B. Murray Vocational School", 0.327742e2, -0.799423e2, 1],
+      ["Branford-Horry House", 0.327749e2, -0.799332e2, 2],
+      ["Miles Brewton House", 0.327724e2, -0.799347e2, 3],
+      ["Castle Pinckney", 0.327708e2, -0.799319e2, 4],
+      ["Farmers' and Exchange Bank", 0.327725545e2, -0.79929749e2, 5],
+      ["William Gibbes House", 0.32770886e2, -0.799367389e2, 6],
+      ["Dubose Heyward House", 0.327745898e2, -0.799311965e2, 7],
+      ["Heyward-Washington House", 0.327752913e2, -0.799314934e2, 8],
+      ["Robert William Roper House", 0.327708363e2, -0.799307531e2, 9],
+      ["Nathaniel Russell House", 0.327739907e2, -0.799331578e2, 10],
+      ["Simmons-Edwards House", 0.327726521e2, -0.799357074e2, 11],
+      ["St. Michael's Episcopal Church", 0.327758006e2, -0.799331609e2, 12],
+      ["Col. John Stuart House", 0.327744099e2, -0.799354145e2, 13],
+      ["Sword Gate Houses", 0.32774268e2, -0.799358801e2, 14],
+      ["Circular Congregational Church and Parish House", 0.327789199e2, -0.799332265e2, 15],
+      ["Dock Street Theatre", 0.327781809e2, -0.799316458e2, 16],
+      ["Exchange and Provost", 0.327768475e2, -0.799292327e2, 17],
+      ["Fireproof Building", 0.32777231e2, -0.799330008e2, 18],
+      ["Hibernian Hall", 0.327774766e2, -0.79933747e2, 19],
+      ["Huguenot Church", 0.327781534e2, -0.799312751e2, 20],
+      ["Market Hall and Sheds", 0.327807357e2, -0.79933432e2, 21],
+      ["McCrady's Tavern and Long Room", 0.327781806e2, -0.799293947e2, 22],
+      ["Old Marine Hospital", 0.327779327e2, -0.799395667e2, 23],
+      ["Old Slave Mart", 0.327778869e2, -0.799306189e2, 24],
+      ["Powder Magazine", 0.327794465e2, -0.799322557e2, 25],
+      ["U.S. Customhouse", 0.327808363e2, -0.799287458e2, 26],
+      ["Joseph Manigault House", 0.327889675e2, -0.799376437e2, 27],
+      ["Atlanticville Historic District", 0.32771e2, -0.79855e2, 28],
+      ["Battery Gadsden", 0.327603e2, -0.798425e2, 29],
+      ["Battery Thomson", 0.327602e2, -0.798427e2, 30],
+      ["Fort Sumter National Monument", 0.327709427e2, -0.798550196e2, 31],
+      ["Sullivan's Island Historic District", 0.32759e2, -0.79848e2, 32],
+      ["USS CLAMAGORE (SS-343)", 0.327642406e2, -0.798333776e2, 33],
+      ["Ashley River Historic District", 0.330106e2, -0.808983e2, 34],
+      ["Governor William Aiken House", 0.327911e2, -0.799349e2, 35],
+      ["William Aiken House and Associated Railroad Structures", 0.327892e2, -0.799383e2, 36],
+      ["Ashley River Road", 0.328802e2, -0.802699e2, 37],
+      ["Alexander Bache U.S. Coast Survey Line", 0.325108e2, -0.80305e2, 38],
+      ["Bailey's Store", 0.325604e2, -0.802821e2, 39],
+      ["Barnwell House", 0.467629e2, -0.532179e2, 40],
+      ["Battery Cheves", 0.327421e2, -0.799172e2, 41],
+      ["Battery LeRoy", 0.327419e2, -0.799856e2, 42],
+      ["Battery #1", 0.327419e2, -0.799856e2, 43],
+      ["Battery #5", 0.327419e2, -0.799856e2, 44],
+      ["Battery Tynes", 0.327225e2, -0.800141e2, 45],
+      ["Battery Wilkes", 0.32848e2, -0.800713e2, 46],
+      ["Governor Thomas Bennett House", 0.32782e2, -0.799497e2, 47],
+      ["Bethel African Methodist Episcopal Church", 0.330892e2, -0.794587e2, 48],
+      ["Bethel Methodist Church", 0.32784e2, -0.799432e2, 49],
+      ["Bleak Hall Plantation Outbuildings", 0.325411e2, -0.803603e2, 50],
+      ["Boone Hall Plantation", 0.328534e2, -0.798195e2, 51],
+      ["Blake Tenements", 0.327768e2, -0.799333e2, 52],
+      ["William Blacklock House", 0.327831e2, -0.799417e2, 53],
+      ["Brick House Ruins", 0.325404e2, -0.810517e2, 54],
+      ["Brooklands Plantation", 0.325755e2, -0.803658e2, 55],
+      ["Robert Brewton House", 0.327745e2, -0.799314e2, 56],
+      ["Cape Romain Lighthouses", 0.330189e2, -0.793759e2, 57],
+      ["Cassina Point", 0.325915e2, -0.80253e2, 58],
+      ["Central Baptist Church", 0.327886e2, -0.799428e2, 59],
+      ["Charleston Naval Hospital Historic District", 0.329131559e2, -0.802298624e2, 60],
+      ["Charleston Navy Yard Historic District", 0.329131559e2, -0.802298624e2, 61],
+      ["Charleston Navy Yard Officers", 0.329131559e2, -0.802298624e2, 62],
+      ["Charleston Historic District", 0.328209674e2, -0.801105655e2, 63],
+      ["Fort Palmetto", 0.32844432e2, -0.798157607e2, 64],
+      ["Charleston's French Quarter District", 0.328209674e2, -0.801105655e2, 65],
+      ["Christ Church", 0.328321502e2, -0.798984333e2, 66],
+      ["Citizens and Southern National Bank of South Carolina", 0.327768256e2, -0.799315808e2, 67],
+      ["Cigar Factory", 0.327871131e2, -0.799313897e2, 68],
+      ["Coming Street Cemetery", 0.327899383e2, 0.799451673e2, 69],
+      ["Cook's Old Field Cemetery", 0.328252945e2, -0.798209824e2, 70],
+      ["Crawford's Plantation House", 0.32534668e2, -0.803025994e2, 71],
+      ["College of Charleston", 0.327834441e2, -0.799391905e2, 72],
+      ["Drayton Hall", 0.327796462e2, -0.80108613e2, 73],
+      ["Edisto Island Baptist Church", 0.325817493e2, -0.804824209e2, 74],
+      ["Edisto Island Presbyterian Church", 0.325817493e2, -0.804824209e2, 75],
+      ["The William Enston Home", 0.32801697e2, -0.799507957e2, 76],
+      ["Farmfield Plantation House", 0.327756649e2, -0.799948909e2, 77],
+      ["Fenwick Hall", 0.327832831e2, -0.800279809e2, 78],
+      ["Florence Crittenton Home", 0.328036024e2, -0.799570881e2, 79],
+      ["Fort Johnson/Powder Magazine", 0.327225296e2, -0.800140684e2, 80],
+      ["Fort Moultrie Quartermaster and Support Facilities Historic District", 0.327709427e2, -0.798550196e2, 81],
+      ["Pringle", 0.327318581e2, -0.799836476e2, 82],
+      ["Fort Trenholm", 0.327175801e2, -0.802158578e2, 83],
+      ["Frogmore", 0.325409407e2, -0.803602856e2, 84],
+      ["Greek Orthodox Church of the Holy Trinity", 0.327980186e2, -0.799505178e2, 85],
+      ["Grove Plantation", 0.326187089e2, -0.803460945e2, 86],
+      ["H. L. Hunley", 0.328566684e2, -0.799612402e2, 87],
+      ["Hampton Park Terrace Historic District", 0.328009231e2, -0.799531075e2, 88],
+      ["Spanish Mount Point", 0.32499e2, -0.80322e2, 89],
+      ["Hampton Plantation", 0.331988835e2, -0.794415257e2, 90],
+      ["Harrietta Plantation", 0.330960683e2, -0.794836646e2, 91],
+      ["Hutchinson House", 0.325682137e2, -0.802607222e2, 92],
+      ["John's Island Presbyterian Church", 0.326865628e2, -0.800842165e2, 93],
+      ["King Cemetery", 0.327208015e2, -0.803831757e2, 94],
+      ["Kahal Kadosh Beth Elohim Synagogue", 0.327822157e2, -0.799353188e2, 95],
+      ["Lowndes Grove", 0.328015939e2, -0.799688198e2, 96],
+      ["Lucas Family Cemetery", 0.327956347e2, -0.798737679e2, 97],
+      ["Jonathan Lucas House", 0.327826543e2, -0.799506149e2, 98],
+      ["Unnamed Battery", 0.32802e2, -0.80056e2, 99],
+      ["Magnolia Cemetery", 0.328193788e2, -0.79942e2, 100],
+      ["Magnolia Plantation and Gardens", 0.328784862e2, -0.800904717e2, 101],
+      ["McClellanville Historic District", 0.330879209e2, -0.794643444e2, 102],
+      ["McLeod Plantation", 0.32763e2, -0.799752e2, 103],
+      ["Middleton's Plantation", 0.32899e2, -0.8014e2, 104],
+      ["Clark Mills Studio", 0.327764631e2, -0.799316854e2, 105],
+      ["Morris Island Lighthouse", 0.326953489e2, -0.79885829e2, 106],
+      ["Unnamed Battery No. 1", 0.32802e2, -0.80056e2, 107],
+      ["Mount Pleasant Historic District", 0.327849185e2, -0.798760702e2, 108],
+      ["Moving Star Hall", 0.327369e2, -0.80035e2, 109],
+      ["James Nicholson House", 0.327864763e2, -0.799469626e2, 110],
+      ["Oak Island", 0.33892828e2, -0.780371158e2, 111],
+      ["Oakland Plantation House", 0.32538e2, -0.80352e2, 112],
+      ["Old Bethel United Methodist Church", 0.327844868e2, -0.799442589e2, 113],
+      ["Old Courthouse", 0.32786111e2, -0.798757686e2, 114],
+      ["Old House Plantation and Commissary", 0.32537929e2, -0.802966205e2, 115],
+      ["Unnamed Battery No. 2", 0.32802e2, -0.80056e2, 116],
+      ["Porter Military Academy", 0.327866875e2, -0.799495357e2, 117],
+      ["Dr. John B. Patrick House", 0.327597296e2, -0.798464373e2, 118],
+      ["Presbyterian Manse", 0.327557583e2, -0.806261779e2, 119],
+      ["Presqu'ile", 0.327955903e2, -0.799353407e2, 120],
+      ["The Progressive Club", 0.32676774e2, -0.800426917e2, 121],
+      ["Prospect Hill", 0.325754563e2, -0.803658234e2, 122],
+      ["Robert Barnwell Rhett House", 0.327863339e2, -0.799444869e2, 123],
+      ["William Robb House", 0.327875895e2, -0.799494736e2, 124],
+      ["Rockville Historic District", 0.32600187e2, -0.801964523e2, 125],
+      ["Thomas Rose House", 0.327738265e2, -0.799315377e2, 126],
+      ["Edward Rutledge House", 0.327760135e2, -0.799358567e2, 127],
+      ["William Seabrook House", 0.327557583e2, -0.806261779e2, 128],
+      ["Gov. John Rutledge House", 0.327764039e2, -0.79935756e2, 129],
+      ["Seaside Plantation House", 0.32726249e2, -0.806334547e2, 130],
+      ["Seaside School", 0.325410854e2, -0.803602848e2, 131],
+      ["Secessionville Historic District", 0.327057386e2, -0.799417225e2, 132],
+      ["Sewee Mound", 0.33037e2, -0.7975e2, 133],
+      ["Site of Old Charles Towne", 0.3281e2, -0.7999e2, 134],
+      ["Snee Farm", 0.328378156e2, -0.798257388e2, 135],
+      ["South Carolina National Bank of Charleston", 0.327770296e2, -0.799294603e2, 136],
+      ["South Carolina State Arsenal", 0.327873589e2, -0.799380827e2, 137],
+      ["James Sparrow House", 0.327899239e2, -0.799467506e2, 138],
+      ["St. Andrews Episcopal Church", 0.328320594e2, -0.800469877e2, 139],
+      ["St. James Episcopal Church, Santee", 0.33171e2, -0.79467e2, 140],
+      ["St. Mary's Roman Catholic Church", 0.327818735e2, -0.799349587e2, 141],
+      ["Stiles-Hinson House", 0.327518356e2, -0.799311873e2, 142],
+      ["St. Philip's Episcopal Church", 0.327791103e2, -0.799314576e2, 143],
+      ["Sunnyside", 0.325514463e2, -0.803143679e2, 144],
+      ["Josiah Smith Tennent House", 0.327989702e2, -0.799370742e2, 145],
+      ["Hephzibah Jenkins Townsend Tabby Oven Ruins", 0.3255e2, -0.80299e2, 146],
+      ["Trinity Episcopal Church", 0.325410854e2, -0.803602848e2, 147],
+      ["U.S. Post Office and Courthouse", 0.327761798e2, -0.799334557e2, 148],
+      ["Unitarian Church", 0.327787044e2, -0.799364658e2, 149],
+      ["USS LAFFEY", 0.327894184e2, -0.799101748e2, 150],
+      ["USS YORKTOWN (CV-10)", 0.327904402e2, -0.79910721e2, 151],
+      ["Denmark Vesey House", 0.327823607e2, -0.799434611e2, 152],
+      ["The Wedge", 0.330888e2, -0.7948612e2, 153],
+      ["Wescott Road", 0.325410854e2, -0.803602848e2, 154],
+      ["West Point Rice Mill", 0.32779e2, -0.7995e2, 155],
+      ["Wilkinson-Boineau House", 0.327195425e2, -0.803523857e2, 156],
+      ["Willtown Bluff", 0.326787586e2, -0.804183655e2, 157],
+      ["Windsor Plantation", 0.325410854e2, -0.803602848e2, 158]
+    ]
+
+    var marker, i;
+
+    for (i = 0; i < locations.length; i++) {
+      marker = new google.maps.Marker({
+        position: new google.maps.LatLng(locations[i][1], locations[i][2]),
+        map: map
+      });
+
+      google.maps.event.addListener(marker, 'click', (function(marker, i) {
+        return function() {
+          infoWindow.setContent(locations[i][0]);
+          infoWindow.open(map, marker);
+        }
+      })(marker, i));
+    }
+  };
+
+  function check_pick_up_lat_long() {
+    setInterval((function() {
+      var lat = document.getElementById("geofencing_lat").value
+      var long = document.getElementById("geofencing_long").value
+      var count = parseInt(document.getElementById("geofencing_count").value)
+      if (lat !== "") {
+        if (count == 0) {
+          initMap(parseFloat(lat), parseFloat(long) );
+          document.getElementById("geofencing_count").value = 1
+        }
+      }else{
+        return console.log("no lat-long");
+      };
+    }), 1000);
+  };
