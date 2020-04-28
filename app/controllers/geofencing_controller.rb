@@ -1,6 +1,11 @@
 class GeofencingController < ApplicationController
 
   def index
+    locations = Location.where("latitude is not null and longitude is not null")
+    @locations = []
+    locations.each_with_index do |l, index| @locations << [l.name, l.latitude, l.longitude, index+1] end
+    @central_coords = []
+    Tour.all.map{ |t| @central_coords << t.polygon_coordinates.map{ |c| { lat: eval(c)[:lat], lng: eval(c)[:long] } } }
   end
 
   def get_position
